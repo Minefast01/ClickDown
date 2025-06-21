@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickDown - ClickUp Clone</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f7f8fa;
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 56px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            z-index: 1000;
+        }
+        .header .logo {
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: #7b68ee;
+            letter-spacing: 1px;
+        }
+        .header button {
+            margin-left: 8px;
+            padding: 6px 14px;
+            border: none;
+            border-radius: 5px;
+            background: #f0f4ff;
+            color: #7b68ee;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .header button:hover {
+            background: #e0e7ff;
+        }
+        .header > div:last-child {
+            margin-right: 32px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            width: 220px;
+            height: calc(100% - 56px);
+            background: #fff;
+            box-shadow: 1px 0 4px rgba(0,0,0,0.04);
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            transition: width 0.2s;
+        }
+        .sidebar a {
+            color: #333;
+            text-decoration: none;
+            padding: 12px 32px;
+            border-radius: 6px;
+            margin: 2px 0;
+            transition: background 0.2s, color 0.2s;
+            font-size: 1rem;
+        }
+        .sidebar a.active, .sidebar a:hover {
+            background: #f0f4ff;
+            color: #7b68ee;
+        }
+        .main {
+            margin-left: 220px;
+            margin-top: 56px;
+            padding: 32px;
+            min-height: calc(100vh - 56px);
+            transition: margin 0.2s, padding 0.2s;
+        }
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        form {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        input[type="text"] {
+            flex: 1 1 120px;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        button[type="submit"], #saveDoc {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 5px;
+            background: #7b68ee;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button[type="submit"]:hover, #saveDoc:hover {
+            background: #5a4fcf;
+        }
+        textarea {
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        .kanban-col {
+            background: #f7f8fa;
+            border-radius: 8px;
+            min-width: 220px;
+            flex: 1 1 220px;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            max-height: 60vh;
+        }
+        .kanban-title {
+            font-weight: bold;
+            color: #7b68ee;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .kanban-list {
+            flex: 1;
+            min-height: 40px;
+        }
+        .kanban-task {
+            background: #fff;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            padding: 10px 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+            cursor: grab;
+            font-size: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .kanban-task.dragging {
+            opacity: 0.5;
+        }
+        .kanban-task .delete-btn {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        @media (max-width: 900px) {
+            .main {
+                padding: 16px;
+            }
+            .sidebar {
+                width: 160px;
+            }
+            .main {
+                margin-left: 160px;
+            }
+        }
+        @media (max-width: 700px) {
+            .header {
+                flex-direction: column;
+                height: auto;
+                align-items: flex-start;
+                padding: 8px 8px 0 8px;
+            }
+            .sidebar {
+                position: static;
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                padding: 0;
+                box-shadow: none;
+                border-bottom: 1px solid #eee;
+                overflow-x: auto;
+                justify-content: flex-start;
+            }
+            .sidebar a {
+                padding: 10px 10px;
+                font-size: 0.95rem;
+                margin: 0 2px;
+                white-space: nowrap;
+            }
+            .main {
+                margin-left: 0;
+                margin-top: 0;
+                padding: 8px;
+            }
+            .kanban-col { min-width: 160px; padding: 4px; }
+            .kanban-title { font-size: 0.98rem; }
+        }
+        @media (max-width: 500px) {
+            .header .logo {
+                font-size: 1.1rem;
+            }
+            .card {
+                padding: 12px;
+            }
+            input[type="text"], textarea {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">ClickDown</div>
+        <div style="margin-left:auto;">
+            <button id="langTH">TH</button>
+            <button id="langEN">ENG</button>
+        </div>
+    </div>
+    <div class="sidebar">
+        <a href="#" class="active">Dashboard</a>
+        <a href="#">Tasks</a>
+        <a href="#">รายรับรายจ่าย</a>
+    </div>
+    <div class="main">
+        <div id="dashboard" class="card section">
+            <h2 id="dashboardTitle">Welcome to ClickDown</h2>
+            <p id="dashboardDesc">This is a simple ClickUp-inspired project management UI. Add your own features and customize as you like!</p>
+        </div>
+        <div id="tasks" class="card section" style="display:none;">
+            <h3 id="tasksTitle">Tasks</h3>
+            <form id="taskForm" style="margin-bottom:16px;">
+                <input type="text" id="taskInput" placeholder="Add new task" required>
+                <button type="submit" id="addTaskBtn">Add</button>
+            </form>
+            <div id="kanbanBoard" style="display:flex;gap:16px;overflow-x:auto;">
+                <div class="kanban-col" data-status="todo">
+                    <div class="kanban-title" id="kanbanTodoTitle">To Do</div>
+                    <div class="kanban-list" id="todoList"></div>
+                </div>
+                <div class="kanban-col" data-status="inprogress">
+                    <div class="kanban-title" id="kanbanInProgressTitle">In Progress</div>
+                    <div class="kanban-list" id="inprogressList"></div>
+                </div>
+                <div class="kanban-col" data-status="done">
+                    <div class="kanban-title" id="kanbanDoneTitle">Done</div>
+                    <div class="kanban-list" id="doneList"></div>
+                </div>
+            </div>
+        </div>
+        <div id="finance" class="card section" style="display:none;">
+            <h3 id="financeTitle">รายรับรายจ่าย</h3>
+            <form id="financeForm" style="margin-bottom:16px;">
+                <input type="text" id="financeInput" placeholder="เพิ่มรายการ" required>
+                <button type="submit" id="addFinanceBtn">เพิ่ม</button>
+            </form>
+            <div id="financeBoard" style="display:flex;gap:16px;overflow-x:auto;">
+                <div class="kanban-col" data-status="income">
+                    <div class="kanban-title" id="kanbanIncomeTitle">รายรับ</div>
+                    <div class="kanban-list" id="incomeList"></div>
+                </div>
+                <div class="kanban-col" data-status="expense">
+                    <div class="kanban-title" id="kanbanExpenseTitle">รายจ่าย</div>
+                    <div class="kanban-list" id="expenseList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button id="exportDataBtn" style="position:fixed;bottom:16px;right:16px;z-index:2000;">Export Data</button>
+<!-- Firebase App (core) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<!-- Firebase Auth -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<!-- Firestore -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyABS6tzrhtjjxwHyds63qhon-LNkqoVBJY",
+  authDomain: "clickdown-7ab66.firebaseapp.com",
+  projectId: "clickdown-7ab66",
+  storageBucket: "clickdown-7ab66.appspot.com",
+  messagingSenderId: "330786920178",
+  appId: "1:330786920178:web:fedb8efd4a16c6ca9ee26b",
+  measurementId: "G-Y98CV73HJ8"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let userEmail = localStorage.getItem('clickdown_user_email') || '';
+let userUid = localStorage.getItem('clickdown_user_uid') || '';
+if(!userEmail || !userUid) {
+    window.location.href = 'index.html';
+}
+// Language data
+const langData = {
+  EN: {
+    dashboardTitle: 'Welcome to ClickDown',
+    dashboardDesc: 'This is a simple ClickUp-inspired project management UI. Add your own features and customize as you like!',
+    tasksTitle: 'Tasks',
+    addTaskBtn: 'Add',
+    taskInput: 'Add new task',
+    kanbanTodo: 'To Do',
+    kanbanInProgress: 'In Progress',
+    kanbanDone: 'Done',
+    deleteTask: 'Delete this task?',
+    financeTitle: 'Finance',
+    addFinanceBtn: 'Add',
+    financeInput: 'Add new record',
+    kanbanIncome: 'Income',
+    kanbanExpense: 'Expense',
+    deleteFinance: 'Delete this record?',
+    sidebar: ['Dashboard','Tasks','Finance']
+  },
+  TH: {
+    dashboardTitle: 'สวัสดี! ยินดีต้อนรับสู่ ClickDown',
+    dashboardDesc: 'ระบบจัดการงานและโปรเจกต์ที่ช่วยให้คุณทำงานเป็นทีมได้อย่างมีประสิทธิภาพ จัดระเบียบงานและติดตามความคืบหน้าได้ง่าย ๆ',
+    tasksTitle: 'รายการงาน',
+    addTaskBtn: 'เพิ่มงาน',
+    taskInput: 'พิมพ์ชื่องานที่ต้องการเพิ่ม',
+    kanbanTodo: 'ยังไม่เริ่ม',
+    kanbanInProgress: 'กำลังดำเนินการ',
+    kanbanDone: 'เสร็จสิ้น',
+    deleteTask: 'คุณต้องการลบงานนี้หรือไม่?',
+    financeTitle: 'รายรับรายจ่าย',
+    addFinanceBtn: 'เพิ่ม',
+    financeInput: 'เพิ่มรายการ',
+    kanbanIncome: 'รายรับ',
+    kanbanExpense: 'รายจ่าย',
+    deleteFinance: 'ลบรายการนี้หรือไม่?',
+    sidebar: ['หน้าแรก','รายการงาน','รายรับรายจ่าย']
+  }
+};
+let currentLang = 'EN';
+function setLang(lang) {
+  currentLang = lang;
+  const d = langData[lang];
+  document.getElementById('dashboardTitle').textContent = d.dashboardTitle;
+  document.getElementById('dashboardDesc').textContent = d.dashboardDesc;
+  document.getElementById('tasksTitle').textContent = d.tasksTitle;
+  document.getElementById('addTaskBtn').textContent = d.addTaskBtn;
+  document.getElementById('taskInput').placeholder = d.taskInput;
+  document.getElementById('kanbanTodoTitle').textContent = d.kanbanTodo;
+  document.getElementById('kanbanInProgressTitle').textContent = d.kanbanInProgress;
+  document.getElementById('kanbanDoneTitle').textContent = d.kanbanDone;
+  document.getElementById('financeTitle').textContent = d.financeTitle;
+  document.getElementById('addFinanceBtn').textContent = d.addFinanceBtn;
+  document.getElementById('financeInput').placeholder = d.financeInput;
+  document.getElementById('kanbanIncomeTitle').textContent = d.kanbanIncome;
+  document.getElementById('kanbanExpenseTitle').textContent = d.kanbanExpense;
+  document.querySelectorAll('.sidebar a').forEach((a,i)=>{ a.textContent = d.sidebar[i]; });
+  renderKanban();
+  renderFinanceBoard();
+}
+document.getElementById('langTH').onclick = ()=>setLang('TH');
+document.getElementById('langEN').onclick = ()=>setLang('EN');
+// Sidebar navigation
+const sections = ['dashboard','tasks','finance'];
+document.querySelectorAll('.sidebar a').forEach((el, idx) => {
+    el.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelectorAll('.sidebar a').forEach(a=>a.classList.remove('active'));
+        el.classList.add('active');
+        sections.forEach(s=>document.getElementById(s).style.display='none');
+        document.getElementById(sections[idx]).style.display='block';
+    });
+});
+// Tasks
+let kanbanTasks = [];
+let financeItems = [];
+// Load data from Firestore (per user)
+async function loadDataFromFirestore() {
+    kanbanTasks = [];
+    financeItems = [];
+    // Load tasks
+    const tasksSnap = await db.collection('users').doc(userUid).collection('tasks').get();
+    tasksSnap.forEach(doc => kanbanTasks.push({ id: doc.id, ...doc.data() }));
+    // Load finance
+    const financeSnap = await db.collection('users').doc(userUid).collection('finance').get();
+    financeSnap.forEach(doc => financeItems.push({ id: doc.id, ...doc.data() }));
+    renderKanban();
+    renderFinanceBoard();
+}
+async function saveTasks() {
+    // Clear all then re-add (simple way)
+    const ref = db.collection('users').doc(userUid).collection('tasks');
+    const snap = await ref.get();
+    const batch = db.batch();
+    snap.forEach(doc => batch.delete(doc.ref));
+    kanbanTasks.forEach(t => {
+        const docRef = ref.doc();
+        batch.set(docRef, { text: t.text, status: t.status });
+    });
+    await batch.commit();
+    exportDataToHTML();
+}
+async function saveFinance() {
+    const ref = db.collection('users').doc(userUid).collection('finance');
+    const snap = await ref.get();
+    const batch = db.batch();
+    snap.forEach(doc => batch.delete(doc.ref));
+    financeItems.forEach(f => {
+        const docRef = ref.doc();
+        batch.set(docRef, { text: f.text, status: f.status });
+    });
+    await batch.commit();
+    exportDataToHTML();
+}
+function renderKanban() {
+    ['todo','inprogress','done'].forEach(status => {
+        const list = document.getElementById(status+'List');
+        list.innerHTML = '';
+        kanbanTasks.filter(t=>t.status===status).forEach((t,i) => {
+            const div = document.createElement('div');
+            div.className = 'kanban-task';
+            div.draggable = true;
+            div.textContent = t.text;
+            // Delete button
+            const del = document.createElement('button');
+            del.className = 'delete-btn';
+            del.innerHTML = '&times;';
+            del.onclick = (e) => {
+                e.stopPropagation();
+                if(confirm(langData[currentLang].deleteTask)) {
+                    kanbanTasks.splice(kanbanTasks.indexOf(t),1);
+                    saveTasks();
+                    renderKanban();
+                }
+            };
+            div.appendChild(del);
+            // Drag events
+            div.addEventListener('dragstart', e => {
+                div.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', kanbanTasks.indexOf(t));
+            });
+            div.addEventListener('dragend', ()=>{
+                div.classList.remove('dragging');
+            });
+            list.appendChild(div);
+        });
+    });
+}
+// Drag & Drop for tasks
+['todo','inprogress','done'].forEach(status => {
+    const list = document.getElementById(status+'List');
+    list.addEventListener('dragover', e => {
+        e.preventDefault();
+        list.style.background = '#e0e7ff';
+    });
+    list.addEventListener('dragleave', ()=>{
+        list.style.background = '';
+    });
+    list.addEventListener('drop', e => {
+        e.preventDefault();
+        list.style.background = '';
+        const idx = +e.dataTransfer.getData('text/plain');
+        kanbanTasks[idx].status = status;
+        saveTasks();
+        renderKanban();
+    });
+});
+// Add Task
+const taskForm = document.getElementById('taskForm');
+const taskInput = document.getElementById('taskInput');
+taskForm.onsubmit = e => {
+    e.preventDefault();
+    if(taskInput.value.trim()) {
+        kanbanTasks.push({ text: taskInput.value.trim(), status: 'todo' });
+        saveTasks();
+        taskInput.value = '';
+        renderKanban();
+    }
+};
+// Finance
+function renderFinanceBoard() {
+    ['income','expense'].forEach(status => {
+        const list = document.getElementById(status+'List');
+        list.innerHTML = '';
+        financeItems.filter(f=>f.status===status).forEach((f,i) => {
+            const div = document.createElement('div');
+            div.className = 'kanban-task';
+            div.draggable = true;
+            div.textContent = f.text;
+            const del = document.createElement('button');
+            del.className = 'delete-btn';
+            del.innerHTML = '&times;';
+            del.onclick = (e) => {
+                e.stopPropagation();
+                if(confirm(langData[currentLang].deleteFinance)) {
+                    financeItems.splice(financeItems.indexOf(f),1);
+                    saveFinance();
+                    renderFinanceBoard();
+                }
+            };
+            div.appendChild(del);
+            // Drag events for finance
+            div.addEventListener('dragstart', e => {
+                div.classList.add('dragging');
+                e.dataTransfer.setData('text/plain', financeItems.indexOf(f));
+            });
+            div.addEventListener('dragend', ()=>{
+                div.classList.remove('dragging');
+            });
+            list.appendChild(div);
+        });
+    });
+}
+// Drag & Drop for finance
+['income','expense'].forEach(status => {
+    const list = document.getElementById(status+'List');
+    list.addEventListener('dragover', e => {
+        e.preventDefault();
+        list.style.background = '#e0e7ff';
+    });
+    list.addEventListener('dragleave', ()=>{
+        list.style.background = '';
+    });
+    list.addEventListener('drop', e => {
+        e.preventDefault();
+        list.style.background = '';
+        const idx = +e.dataTransfer.getData('text/plain');
+        financeItems[idx].status = status;
+        saveFinance();
+        renderFinanceBoard();
+    });
+});
+// Add Finance
+const financeForm = document.getElementById('financeForm');
+const financeInput = document.getElementById('financeInput');
+financeForm.onsubmit = e => {
+    e.preventDefault();
+    // Default เพิ่มเข้า income
+    if(financeInput.value.trim()) {
+        financeItems.push({ text: financeInput.value.trim(), status: 'income' });
+        saveFinance();
+        financeInput.value = '';
+        renderFinanceBoard();
+    }
+};
+// --- Export Data to Data.html ---
+function exportDataToHTML() {
+    const data = {
+        tasks: kanbanTasks,
+        finance: financeItems
+    };
+    const html = `<!DOCTYPE html>\n<html lang='en'><head><meta charset='UTF-8'><title>Data Export</title></head><body><pre>${JSON.stringify(data, null, 2)}</pre></body></html>`;
+    const blob = new Blob([html], {type: 'text/html'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Save Data/Data.html';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 100);
+}
+document.getElementById('exportDataBtn').onclick = exportDataToHTML;
+// Initial render
+// loadDataFromLocal(); // ปิดของเดิม
+loadDataFromFirestore();
+</script>
+</body>
+</html>
