@@ -111,15 +111,14 @@ loginForm.onsubmit = function(e) {
       })
       .catch(err => {
         if(err.code === 'auth/user-not-found') {
-          if(confirm('User not found. Create new account?')) {
-            auth.createUserWithEmailAndPassword(email, password)
-              .then(userCredential => {
-                localStorage.setItem('clickdown_user_email', email);
-                localStorage.setItem('clickdown_user_uid', userCredential.user.uid);
-                window.location.href = 'MainPage.html';
-              })
-              .catch(e => alert(e.message));
-          }
+          // สมัครใหม่อัตโนมัติถ้าไม่เจอ user
+          auth.createUserWithEmailAndPassword(email, password)
+            .then(userCredential => {
+              localStorage.setItem('clickdown_user_email', email);
+              localStorage.setItem('clickdown_user_uid', userCredential.user.uid);
+              window.location.href = 'MainPage.html';
+            })
+            .catch(e => alert(e.message));
         } else {
           alert(err.message);
         }
